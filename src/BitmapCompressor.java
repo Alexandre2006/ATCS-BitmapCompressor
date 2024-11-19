@@ -16,6 +16,10 @@
  *  1240 bits
  ******************************************************************************/
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+
 /**
  *  The {@code BitmapCompressor} class provides static methods for compressing
  *  and expanding a binary bitmap input.
@@ -33,7 +37,43 @@ public class BitmapCompressor {
      */
     public static void compress() {
 
-        // TODO: complete compress()
+        LinkedHashSet<Byte> uniqueBytes = new LinkedHashSet<>();
+        ArrayList<Byte> bytes = new ArrayList<>();
+
+        while (!BinaryStdIn.isEmpty()) {
+            byte byteRead = BinaryStdIn.readByte();
+            uniqueBytes.add(byteRead);
+            bytes.add(byteRead);
+        }
+
+        // Count # of unique chars and length
+        int unique = uniqueBytes.size();
+        int length = bytes.size();
+
+        // Find size of each byte
+        int remainderSize = 3;
+        int lengthOfByte = (int) Math.ceil(Math.log(unique) / Math.log(2));
+        lengthOfByte = lengthOfByte > 0 ? lengthOfByte : 1; // Minimum 0 bytes
+
+        // Find remainder
+        int remainder = (remainderSize + (lengthOfByte * length)) % 8;
+
+        // Write remainder & # of unique elements
+        BinaryStdOut.write(remainder, remainderSize);
+        BinaryStdOut.write(unique, 8);
+
+        // Write each unique element
+        for (Byte uniqueElement : uniqueBytes) {
+            BinaryStdOut.write(uniqueElement);
+        }
+
+        // Convert hashset to list
+        ArrayList<Byte> uniqueBytesList = new ArrayList<>(uniqueBytes);
+
+        // Write each element
+        for (Byte messageByte : bytes) {
+            BinaryStdOut.write(uniqueBytesList.indexOf(messageByte), lengthOfByte);
+        }
 
         BinaryStdOut.close();
     }
