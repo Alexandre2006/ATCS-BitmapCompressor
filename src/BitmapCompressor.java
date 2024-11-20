@@ -30,7 +30,6 @@ import java.util.LinkedHashSet;
  *  @author YOUR NAME HERE
  */
 public class BitmapCompressor {
-
     /**
      * Reads a sequence of bits from standard input, compresses them,
      * and writes the results to standard output.
@@ -51,15 +50,14 @@ public class BitmapCompressor {
         int length = bytes.size();
 
         // Find size of each byte
-        int remainderSize = 3;
         int lengthOfByte = (int) Math.ceil(Math.log(unique) / Math.log(2));
         lengthOfByte = lengthOfByte > 0 ? lengthOfByte : 1; // Minimum 0 bytes
 
         // Find remainder
-        int remainder = (remainderSize + (lengthOfByte * length)) % 8;
+        int remainder = (3 + (lengthOfByte * length)) % 8;
 
         // Write remainder & # of unique elements
-        BinaryStdOut.write(remainder, remainderSize);
+        BinaryStdOut.write(remainder, 3);
         BinaryStdOut.write(unique, 8);
 
         // Write each unique element
@@ -112,7 +110,7 @@ public class BitmapCompressor {
         int byteRemainder = remainder / lengthOfByte;
 
         // Write each element
-        for (Integer index : buffer.subList(0, buffer.size() - byteRemainder)) {
+        for (Integer index : buffer.subList(0, buffer.size() - byteRemainder - 1)) {
             BinaryStdOut.write(uniqueBytes.get(index));
         }
 
