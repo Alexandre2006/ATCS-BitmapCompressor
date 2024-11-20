@@ -84,7 +84,37 @@ public class BitmapCompressor {
      */
     public static void expand() {
 
-        // TODO: complete expand()
+        // Read remainder and unique bytes
+        int remainder = BinaryStdIn.readInt(3);
+        int unique = BinaryStdIn.readInt(8);
+
+        // Read unique bytes
+        ArrayList<Byte> uniqueBytes = new ArrayList<>();
+        for (int i = 0; i < unique; i++) {
+            uniqueBytes.add(BinaryStdIn.readByte());
+        }
+
+        // Calculate size of each byte
+        int lengthOfByte = (int) Math.ceil(Math.log(unique) / Math.log(2));
+        lengthOfByte = lengthOfByte > 0 ? lengthOfByte : 1; // Minimum 0 bytes
+
+        // Read fu
+        ArrayList<Integer> buffer = new ArrayList<>();
+        while (!BinaryStdIn.isEmpty()) {
+            try {
+                buffer.add(BinaryStdIn.readInt(lengthOfByte));
+            } catch (Exception e) {
+                break;
+            }
+        }
+
+        // Remove remainder
+        int byteRemainder = remainder / lengthOfByte;
+
+        // Write each element
+        for (Integer index : buffer.subList(0, buffer.size() - byteRemainder)) {
+            BinaryStdOut.write(uniqueBytes.get(index));
+        }
 
         BinaryStdOut.close();
     }
