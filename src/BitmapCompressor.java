@@ -27,7 +27,7 @@ import java.util.LinkedHashSet;
  *  @author Robert Sedgewick
  *  @author Kevin Wayne
  *  @author Zach Blick
- *  @author YOUR NAME HERE
+ *  @author Alexandre Haddad-Delaveau
  */
 public class BitmapCompressor {
     /**
