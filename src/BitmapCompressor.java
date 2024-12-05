@@ -1,4 +1,4 @@
-/******************************************************************************
+/**
  *  Compilation:  javac BitmapCompressor.java
  *  Execution:    java BitmapCompressor - < input.bin   (compress)
  *  Execution:    java BitmapCompressor + < input.bin   (expand)
@@ -6,18 +6,17 @@
  *  Data files:   q32x48.bin
  *                q64x96.bin
  *                mystery.bin
- *
+ * <p>
  *  Compress or expand binary input from standard input.
- *
+ * <p>
  *  % java DumpBinary 0 < mystery.bin
  *  8000 bits
- *
+ * <p>
  *  % java BitmapCompressor - < mystery.bin | java DumpBinary 0
  *  1240 bits
- ******************************************************************************/
+ */
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 
 /**
@@ -34,43 +33,38 @@ public class BitmapCompressor {
      * Reads a sequence of bits from standard input, compresses them,
      * and writes the results to standard output.
      */
-    public static void compress() {
+    static int LENGTH = 8;
+    static int MAX = (int) (Math.pow(2, LENGTH - 1) - 1);
 
-        LinkedHashSet<Byte> uniqueBytes = new LinkedHashSet<>();
-        ArrayList<Byte> bytes = new ArrayList<>();
+    public static void compress() {
+        boolean lastValue = false;
+        int valueCount = 0;
 
         while (!BinaryStdIn.isEmpty()) {
-            byte byteRead = BinaryStdIn.readByte();
-            uniqueBytes.add(byteRead);
-            bytes.add(byteRead);
+            boolean currentValue = BinaryStdIn.readBoolean();
+
+            if (currentValue != lastValue) {
+                // Write count
+                BinaryStdOut.write(valueCount, LENGTH);
+
+                // Switch value (if necessary) and reset counter
+                lastValue = currentValue;
+                valueCount = 1;
+            } else {
+                // Increment count
+                valueCount ++;
+
+                // Check if max has been reached
+                if (valueCount == MAX) {
+                    BinaryStdOut.write(0, LENGTH);
+                    valueCount = 0;
+                }
+            }
         }
 
-        // Count # of unique chars and length
-        int unique = uniqueBytes.size();
-        int length = bytes.size();
-
-        // Find size of each byte
-        int lengthOfByte = (int) Math.ceil(Math.log(unique) / Math.log(2));
-        lengthOfByte = lengthOfByte > 0 ? lengthOfByte : 1; // Minimum 0 bytes
-
-        // Find remainder
-        int remainder = (3 + (lengthOfByte * length)) % 8;
-
-        // Write remainder & # of unique elements
-        BinaryStdOut.write(remainder, 3);
-        BinaryStdOut.write(unique, 8);
-
-        // Write each unique element
-        for (Byte uniqueElement : uniqueBytes) {
-            BinaryStdOut.write(uniqueElement);
-        }
-
-        // Convert hashset to list
-        ArrayList<Byte> uniqueBytesList = new ArrayList<>(uniqueBytes);
-
-        // Write each element
-        for (Byte messageByte : bytes) {
-            BinaryStdOut.write(uniqueBytesList.indexOf(messageByte), lengthOfByte);
+        // If end, write remaining count
+        if (valueCount != 0) {
+            BinaryStdOut.write(valueCount);
         }
 
         BinaryStdOut.close();
@@ -81,37 +75,23 @@ public class BitmapCompressor {
      * and writes the results to standard output.
      */
     public static void expand() {
+        boolean lastValue = false;
 
-        // Read remainder and unique bytes
-        int remainder = BinaryStdIn.readInt(3);
-        int unique = BinaryStdIn.readInt(8);
+        while(!BinaryStdIn.isEmpty()) {
+            int count = BinaryStdIn.readInt(LENGTH);
 
-        // Read unique bytes
-        ArrayList<Byte> uniqueBytes = new ArrayList<>();
-        for (int i = 0; i < unique; i++) {
-            uniqueBytes.add(BinaryStdIn.readByte());
-        }
+            if (count != 0) {
+                // Write number of values
+                for (int i = 0; i < count; i++) {
+                    BinaryStdOut.write(lastValue);
+                }
 
-        // Calculate size of each byte
-        int lengthOfByte = (int) Math.ceil(Math.log(unique) / Math.log(2));
-        lengthOfByte = lengthOfByte > 0 ? lengthOfByte : 1; // Minimum 0 bytes
-
-        // Read fu
-        ArrayList<Integer> buffer = new ArrayList<>();
-        while (!BinaryStdIn.isEmpty()) {
-            try {
-                buffer.add(BinaryStdIn.readInt(lengthOfByte));
-            } catch (Exception e) {
-                break;
+                lastValue = !lastValue;
+            } else {
+                for (int i = 0; i < MAX; i++) {
+                    BinaryStdOut.write(lastValue);
+                }
             }
-        }
-
-        // Remove remainder
-        int byteRemainder = remainder / lengthOfByte;
-
-        // Write each element
-        for (Integer index : buffer.subList(0, buffer.size() - byteRemainder - 1)) {
-            BinaryStdOut.write(uniqueBytes.get(index));
         }
 
         BinaryStdOut.close();
